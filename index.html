@@ -362,7 +362,7 @@ async function startCamera() {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user',width:1280,height:720 }, audio:false });
     const v = $('video');
     v.srcObject = stream;
-    v.onloadedmetadata = () => { v.play(); countdown(); };
+    v.onloadedmetadata = () => { v.play(); setTimeout(shoot, 800); };
   } catch(e) {
     $('cam-screen').classList.remove('show');
     $('err').classList.add('show');
